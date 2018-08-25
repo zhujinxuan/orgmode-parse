@@ -93,10 +93,6 @@ data Section = Section
   , sectionParagraph  :: Text            -- ^ Arbitrary text
   } deriving (Show, Eq, Generic)
 
-data Markup i = Plain i | Bold [Markup i] | Italic [Markup i] deriving (Show, Eq, Generic)
-newtype MarkupText = Markup Text
-newtype Paragraph = Paragraph [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)
-
 newtype Properties = Properties { unProperties :: HashMap Text Text }
   deriving (Show, Eq, Generic, Semigroup, Monoid)
 

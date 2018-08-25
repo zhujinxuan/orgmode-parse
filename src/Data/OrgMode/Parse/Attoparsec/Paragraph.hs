@@ -17,12 +17,16 @@ where
 
 import           Control.Applicative
 import           Data.Semigroup
-import           Data.OrgMode.Types (Paragraph, MarkupText, Plain)
 import  Data.Attoparsec.Text (char, takeUntil)
 
+-- Markup Structure
+data Markup i = Plain i | Bold [Markup i] | Italic [Markup i] deriving (Show, Eq, Generic)
+newtype MarkupText = Markup Text
+newtype Paragraph = Paragraph [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)
 
-parseMarkup :: (Text -> MarkupText ) -> Char -> Parser MarkupText
-parseMarkup t c = do
+-- Parse a markup text
+createMarkupParser :: (Text -> MarkupText ) -> Char -> Parser MarkupText
+createMarkupParser t c = do
   _ <- char c
   content <- takeUntil (== c)
   _ <- char c
@@ -40,4 +44,3 @@ parserPlainTextFallback tokens = do
   a <- anyChar
   b <- takeUtil (`elem` tokens)
   return Plain (a:b)
-

@@ -9,6 +9,7 @@
 -- Parsing combinators for org-mode markups and paragraphs.
 ----------------------------------------------------------------------------
 
+{-# LANGUAGE RecordWildCards   #-}
 
 module Data.OrgMode.Parse.Attoparsec.Paragraph
 ( 
@@ -17,8 +18,8 @@ where
 
 import           Control.Applicative
 import           Data.Semigroup
-import           Data.Text                             (Text)
-import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice)
+import           Data.Text                             (Text, cons)
+import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar)
 import           Data.List                             (find)
 import           Data.Maybe                            (isNothing)
 
@@ -33,6 +34,22 @@ tokens = [ Token '*' Bold, Token '_' Italic ]
 isNotToken :: Char -> Bool
 isNotToken c = c !== '*' (&&) c !== '_'
 
+createTokenParser :: Parser [MarkupText] -> Token -> Parser MarkupText
+createTokenParser innerParser Token{..}= do 
+  _ <- char keyChar
+  content <- takeWhile (!== keyChar) *> innerParser
+  _ <- char keyChar
+  return $ markup content
+
+parsePlainText :: Parser MarkupText
+parsePlainText = do
+  c <- anyChar
+  content <- takeWhile isNotToken
+  return $ Plain (cons c content)
+
+parseMarkupContent :: Parser [MarkupText]
+parseMarkup :: Parser MarkupText
+parseMarkup = choice (map tokens (createTokenParser parseMarkupContent) ++ [parsePlainText])
 
 combine :: [MarkupText] -> Paragraph
 combine :: xs = Paragraph $ foldr appendElement [] xs
@@ -42,20 +59,5 @@ appendElement (Plain "") xs = xs
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (nonEmptyText ++ parserFailedText) : xs
 appendElement h t = h:t
 
-createTokenParser :: (Parser Text -> Parser MarkupText) -> Token -> Parser MarkupText
-createTokenParser innerParser token = do
-  c <- char (keyChar token)
-  content <- innerParser (takeWhile1 (!== keyChar token))
-  c <- char (keyChar token)
-  return (markup token) content
-
--- Parse the Plain 
-parsePlainText :: Parser MarkupText
-parsePlainText = do
-  c <- anyChar
-  content <- takeWhile isNotToken
-  return $Plain (c ++ content)
-
-parseMarkup :: Parser MarkupText
-parseMarkup = choice (map tokens (createTokenParser parseMarkup) ++ [parsePlainText])
+-- parseParagraph :: Parser Paragraph
 

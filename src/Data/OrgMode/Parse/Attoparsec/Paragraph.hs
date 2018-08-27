@@ -19,7 +19,7 @@ where
 import           Control.Applicative
 import           Data.Semigroup
 import           Data.Text                             (Text, cons)
-import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar)
+import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar, parseOnly)
 import           Data.List                             (find)
 import           Data.Maybe                            (isNothing)
 
@@ -37,9 +37,11 @@ isNotToken c = c !== '*' (&&) c !== '_'
 createTokenParser :: Parser [MarkupText] -> Token -> Parser MarkupText
 createTokenParser innerParser Token{..}= do 
   _ <- char keyChar
-  content <- takeWhile isNotToken *> innerParser
+  content <- takeWhile (!== keyChar) 
   _ <- char keyChar
-  return $ markup Plain
+  case parseOnly innerParser content of
+     Left s -> fail s
+     Right a -> return a
 
 parsePlainText :: Parser MarkupText
 parsePlainText = do

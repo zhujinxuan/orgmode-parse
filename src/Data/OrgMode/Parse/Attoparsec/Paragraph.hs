@@ -37,9 +37,9 @@ isNotToken c = c !== '*' (&&) c !== '_'
 createTokenParser :: Parser [MarkupText] -> Token -> Parser MarkupText
 createTokenParser innerParser Token{..}= do 
   _ <- char keyChar
-  content <- takeWhile (!== keyChar) *> innerParser
+  content <- takeWhile isNotToken *> innerParser
   _ <- char keyChar
-  return $ markup content
+  return $ markup Plain
 
 parsePlainText :: Parser MarkupText
 parsePlainText = do

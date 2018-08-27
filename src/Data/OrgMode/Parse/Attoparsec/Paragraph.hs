@@ -17,20 +17,22 @@ where
 
 import           Control.Applicative
 import           Data.Semigroup
-import  Data.Attoparsec.Text (char, takeUntil)
+import           Data.Text                             (Text)
+import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice)
+import           Data.List                             (find)
+import           Data.Maybe                            (isNothing)
 
--- Markup Structure
 data Markup i = Plain i | Bold [Markup i] | Italic [Markup i] deriving (Show, Eq, Generic)
 newtype MarkupText = Markup Text
 newtype Paragraph = Paragraph [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)
+data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} deriving (Show, Eq, Generic)
 
--- Parse a markup text
-createMarkupParser :: (Text -> MarkupText ) -> Char -> Parser MarkupText
-createMarkupParser t c = do
-  _ <- char c
-  content <- takeUntil (== c)
-  _ <- char c
-  return $ t content
+tokens :: [Token]
+tokens = [ Token '*' Bold, Token '_' Italic ]
+
+isNotToken :: Char -> Bool
+isNotToken c = c !== '*' (&&) c !== '_'
+
 
 combine :: [MarkupText] -> Paragraph
 combine :: xs = Paragraph $ foldr appendElement [] xs
@@ -40,7 +42,20 @@ appendElement (Plain "") xs = xs
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (nonEmptyText ++ parserFailedText) : xs
 appendElement h t = h:t
 
-parserPlainTextFallback tokens = do
-  a <- anyChar
-  b <- takeUtil (`elem` tokens)
-  return Plain (a:b)
+createTokenParser :: (Parser Text -> Parser MarkupText) -> Token -> Parser MarkupText
+createTokenParser innerParser token = do
+  c <- char (keyChar token)
+  content <- innerParser (takeWhile1 (!== keyChar token))
+  c <- char (keyChar token)
+  return (markup token) content
+
+-- Parse the Plain 
+parsePlainText :: Parser MarkupText
+parsePlainText = do
+  c <- anyChar
+  content <- takeWhile isNotToken
+  return $Plain (c ++ content)
+
+parseMarkup :: Parser MarkupText
+parseMarkup = choice (map tokens (createTokenParser parseMarkup) ++ [parsePlainText])
+

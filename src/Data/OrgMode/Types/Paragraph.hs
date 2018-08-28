@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Data.OrgMode.Parse.Attoparsec.Paragraph
+-- Module      :  Data.OrgMode.Types.Paragraph
 -- Copyright   :  © 2014 Parnell Springmeyer
 -- License     :  All Rights Reserved
 -- Maintainer  :  Parnell Springmeyer <parnell@digitalmentat.com>
@@ -8,6 +8,9 @@
 --
 -- Parsing combinators for org-mode markups and paragraphs.
 ----------------------------------------------------------------------------
+
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Data.OrgMode.Types.Paragraph
 ( 
@@ -17,8 +20,10 @@ module Data.OrgMode.Types.Paragraph
 where
 
 import           Control.Applicative
+import           GHC.Generics
 import           Data.Semigroup
+import           Data.Text             (Text)
 
 data Markup i = Plain i | Bold [Markup i] | Italic [Markup i] deriving (Show, Eq, Generic)
-newtype MarkupText = Markup Text
+newtype MarkupText = Markup Text deriving (Show, Eq, Generic)
 newtype Paragraph = Paragraph [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)

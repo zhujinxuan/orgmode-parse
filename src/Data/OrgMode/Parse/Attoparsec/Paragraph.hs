@@ -19,7 +19,7 @@ where
 import           Control.Applicative
 import           Data.Semigroup
 import           Data.Text                             (Text, cons)
-import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar, parseOnly)
+import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar, parseOnly, atEnd)
 import           Data.List                             (find)
 import           Data.Maybe                            (isNothing)
 
@@ -51,7 +51,7 @@ parsePlainText = do
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
-parseMarkupContent = isEndOfText <> ((:) <$> parseMarkup <*> parseMarkupContent)
+parseMarkupContent = atEnd <> ((:) <$> parseMarkup <*> parseMarkupContent)
 parseMarkup = choice (map tokens (createTokenParser parseMarkupContent) ++ [parsePlainText])
 
 combine :: [MarkupText] -> Paragraph

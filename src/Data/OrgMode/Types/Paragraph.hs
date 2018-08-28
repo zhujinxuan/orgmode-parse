@@ -19,9 +19,8 @@ module Data.OrgMode.Types.Paragraph
 )
 where
 
-import           Control.Applicative
 import           GHC.Generics
-import           Data.Semigroup
+import           Data.Semigroup       (Semigroup)
 import           Data.Text             (Text)
 
 data Markup i = Plain i | Bold [Markup i] | Italic [Markup i] deriving (Show, Eq, Generic)

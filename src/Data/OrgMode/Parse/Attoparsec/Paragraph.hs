@@ -23,10 +23,8 @@ import           Data.Text                             (Text, cons)
 import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar, parseOnly, atEnd)
 import           Data.List                             (find)
 import           Data.Maybe                            (isNothing)
+import           Data.OrgMode.Types.Paragraph          (MarkupText, Paragraph)
 
-data Markup i = Plain i | Bold [Markup i] | Italic [Markup i] deriving (Show, Eq, Generic)
-newtype MarkupText = Markup Text
-newtype Paragraph = Paragraph [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)
 data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} deriving (Show, Eq, Generic)
 
 tokens :: [Token]

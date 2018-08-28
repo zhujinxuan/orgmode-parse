@@ -51,7 +51,7 @@ parsePlainText = do
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
-parseMarkupContent = atEnd <> ((:) <$> parseMarkup <*> parseMarkupContent)
+parseMarkupContent = atEnd <> (((:) <$> parseMarkup <*> parseMarkupContent) >>= combine)
 parseMarkup = choice (map tokens (createTokenParser parseMarkupContent) ++ [parsePlainText])
 
 combine :: [MarkupText] -> Paragraph

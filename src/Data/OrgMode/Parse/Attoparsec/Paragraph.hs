@@ -18,6 +18,7 @@ where
 
 import           Control.Applicative
 import           Data.Semigroup
+import           Data.Functor                          (($>))
 import           Data.Text                             (Text, cons)
 import           Data.Attoparsec.Text                  (Parser, satisfy, takeTill, choice, anyChar, parseOnly, atEnd)
 import           Data.List                             (find)
@@ -51,11 +52,8 @@ parsePlainText = do
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
-parseMarkupContent = atEnd <> (appendElement <$> parseMarkup <*> parseMarkupContent)
+parseMarkupContent = (atEnd $> []) <> (appendElement <$> parseMarkup <*> parseMarkupContent)
 parseMarkup = choice (map tokens (createTokenParser parseMarkupContent) ++ [parsePlainText])
-
-combine :: [MarkupText] -> Paragraph
-combine :: xs = Paragraph $ foldr appendElement [] xs
 
 appendElement :: MarkupText -> [MarkupText] -> [MarkupText]
 appendElement (Plain "") xs = xs

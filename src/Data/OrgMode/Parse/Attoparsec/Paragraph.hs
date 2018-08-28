@@ -51,6 +51,7 @@ parsePlainText = do
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
+parseMarkupContent = isEndOfText <> ((:) <$> parseMarkup <*> parseMarkupContent)
 parseMarkup = choice (map tokens (createTokenParser parseMarkupContent) ++ [parsePlainText])
 
 combine :: [MarkupText] -> Paragraph
@@ -61,5 +62,7 @@ appendElement (Plain "") xs = xs
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (nonEmptyText ++ parserFailedText) : xs
 appendElement h t = h:t
 
--- parseParagraph :: Parser Paragraph
-
+parseParagraph :: Parser Paragraph
+parseParagraph = do
+  content <- parseMarkupContent
+  return Paragraph content

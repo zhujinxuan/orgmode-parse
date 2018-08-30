@@ -22,7 +22,7 @@ import           Control.Applicative
 import           Data.Semigroup
 import           Data.Functor                          (($>))
 import           Data.Text                             (Text, cons, pack, append)
-import           Data.Attoparsec.Text                  (Parser, satisfy, takeWhile, choice, char, anyChar, parseOnly, atEnd)
+import           Data.Attoparsec.Text                  (Parser, satisfy, takeWhile, choice, char, anyChar, parseOnly, endOfInput)
 import           Data.List                             (find)
 import           Data.Maybe                            (isNothing)
 import           Data.OrgMode.Types.Paragraph          (MarkupText (..), Paragraph (..))
@@ -53,7 +53,7 @@ parsePlainText = do
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
-parseMarkupContent = (appendElement <$> parseMarkup <*> parseMarkupContent) <> (atEnd $> [])
+parseMarkupContent = (endOfInput $> []) <> (appendElement <$> parseMarkup <*> parseMarkupContent)
 parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> parsePlainText
 
 emptyText :: Text

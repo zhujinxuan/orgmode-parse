@@ -13,7 +13,8 @@
 
 module Data.OrgMode.Parse.Attoparsec.Paragraph
 ( 
-  parseParagraph
+  parseParagraph,
+  parsePlainText
 )
 where
 
@@ -52,12 +53,13 @@ parsePlainText = do
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
-parseMarkupContent = (atEnd $> []) <> (appendElement <$> parseMarkup <*> parseMarkupContent)
+parseMarkupContent = (appendElement <$> parseMarkup <*> parseMarkupContent) <> (atEnd $> [])
 parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> parsePlainText
 
 emptyText :: Text
 emptyText = pack ""
 appendElement :: MarkupText -> [MarkupText] -> [MarkupText]
+appendElement a [] = [a]
 appendElement (Plain emptyText) xs = xs
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (append nonEmptyText parserFailedText) : xs
 appendElement h t = h:t

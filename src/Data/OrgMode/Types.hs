@@ -42,6 +42,7 @@ module Data.OrgMode.Types
 , Timestamp         (..)
 , YearMonthDay      (..)
 , Paragraph         (..)
+, MarkupText        (..)
 ) where
 
 import           Control.Monad        (mzero)
@@ -54,7 +55,7 @@ import           Data.Thyme.Calendar  (YearMonthDay (..))
 import           Data.Thyme.LocalTime (Hour, Hours, Minute, Minutes)
 import           GHC.Generics
 import           Data.Semigroup       (Semigroup)
-import           Data.OrgMode.Types.Paragraph          (Paragraph (..))
+import           Data.OrgMode.Types.Paragraph          (Paragraph (..), MarkupText(..))
 -- | Org-mode document.
 data Document = Document
   { documentText      :: Text       -- ^ Text occurring before any Org headlines

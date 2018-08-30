@@ -23,7 +23,6 @@ import           Data.Semigroup
 import           Data.Functor                          (($>))
 import           Data.Text                             (Text, cons, pack, append)
 import           Data.Attoparsec.Text                  (Parser, satisfy, takeWhile, choice, char, anyChar, parseOnly, endOfInput)
-import           Data.List                             (find)
 import           Data.Maybe                            (isNothing)
 import           Data.OrgMode.Types.Paragraph          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile)
@@ -56,13 +55,13 @@ parseMarkup :: Parser MarkupText
 parseMarkupContent = (endOfInput $> []) <> (appendElement <$> parseMarkup <*> parseMarkupContent)
 parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> parsePlainText
 
-emptyText :: Text
-emptyText = pack ""
 appendElement :: MarkupText -> [MarkupText] -> [MarkupText]
 appendElement a [] = [a]
-appendElement (Plain emptyText) xs = xs
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (append nonEmptyText parserFailedText) : xs
-appendElement h t = h:t
+appendElement h t = if h == Plain (pack "") 
+                       then t
+                       else h:t
+            
 
 parseParagraph :: Parser Paragraph
 parseParagraph = Paragraph <$> parseMarkupContent

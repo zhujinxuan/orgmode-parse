@@ -19,7 +19,9 @@ parserMarkupTests = testGroup "Attoparsec orgmode Paragraph"
     testCase "Parses the broken markup Paragraph with token at end" $
       testDocS " text *"  $ Paragraph [(Plain . pack) " text *"],
     testCase "Parses the broken markup Paragraph with token in middle" $
-      testDocS " te*xt "  $ Paragraph [(Plain . pack) " te*xt"]
+      testDocS " te*xt "  $ Paragraph [(Plain . pack) " te*xt "],
+    testCase "Parses Single Markup Paragraph" $
+      testDocS "_* text *_" $ Paragraph [Italic [Bold [(Plain . pack) " text "]]]
   ]
   where
     testDocS s expected = expectParse parseParagraph (pack s) (Right expected)

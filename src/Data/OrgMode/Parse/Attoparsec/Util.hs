@@ -12,16 +12,15 @@ module Data.OrgMode.Parse.Attoparsec.Util
 ( skipOnlySpace,
   nonHeadline,
   takeALine,
-  takeNonEmptyLines
+  takeNonEmptyLines,
 )
 where
 
+import           Data.Semigroup
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, endOfLine, notChar, manyTill, skipSpace)
-import           Data.Text             (Text, cons, empty)
+import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, endOfInput, (<?>))
+import           Data.Text             (Text, cons, empty, snoc)
 import           Data.Functor          (($>))
-import           Data.Monoid           ((<>))
-
 -- | Skip whitespace characters, only!
 --
 -- @Data.Attoparsec.Text.skipSpace@ uses the @isSpace@ predicate from
@@ -38,10 +37,16 @@ nonHeadline :: Parser Text
 nonHeadline = nonHeadline0 <> nonHeadline1
   where
     nonHeadline0 = endOfLine $> empty
-    nonHeadline1 = cons <$> notChar '*' <*> takeALine
+    nonHeadline1 = cons <$> notChar '*' <*> (takeTill isEndOfLine <* endOfLine)
 
 takeALine :: Parser Text
-takeALine = takeTill isEndOfLine <* endOfLine
+takeALine = do
+  content <- takeTill isEndOfLine 
+  c <- (endOfInput $> Nothing) <> (Just <$> anyChar)
+  case c of 
+    Nothing -> return content
+    Just cc -> return $snoc content cc
+
 
 takeNonEmptyLines :: Parser [Text]
-takeNonEmptyLines = manyTill takeALine $ skipSpace *> endOfLine
+takeNonEmptyLines = manyTill takeALine (endOfInput <> (skipSpace *> endOfLine)) <?> "Take Many Lines"

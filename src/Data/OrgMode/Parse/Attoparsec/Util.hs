@@ -9,15 +9,18 @@ Attoparsec utilities.
 -}
 
 module Data.OrgMode.Parse.Attoparsec.Util
-( skipOnlySpace
-, nonHeadline
+( skipOnlySpace,
+  nonHeadline,
+  takeALine,
+  takeNonEmptyLines
 )
 where
 
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, endOfLine, notChar)
+import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, endOfLine, notChar, manyTill, skipSpace)
 import           Data.Text             (Text, cons, empty)
 import           Data.Functor          (($>))
+import           Data.Monoid           ((<>))
 
 -- | Skip whitespace characters, only!
 --
@@ -35,7 +38,10 @@ nonHeadline :: Parser Text
 nonHeadline = nonHeadline0 <> nonHeadline1
   where
     nonHeadline0 = endOfLine $> empty
-    nonHeadline1 = do 
-      result <- cons <$> notChar '*' <*> takeTill isEndOfLine 
-      _ <- endOfLine
-      return result
+    nonHeadline1 = cons <$> notChar '*' <*> takeALine
+
+takeALine :: Parser Text
+takeALine = takeTill isEndOfLine <* endOfLine
+
+takeNonEmptyLines :: Parser [Text]
+takeNonEmptyLines = manyTill takeALine $ skipSpace *> endOfLine

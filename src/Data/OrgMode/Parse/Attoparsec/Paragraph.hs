@@ -20,9 +20,8 @@ where
 
 import           Control.Applicative
 import           Data.Semigroup
-import           Data.Functor                          (($>))
-import           Data.Text                             (Text, cons, pack, append)
-import           Data.Attoparsec.Text                  (Parser, satisfy, takeWhile, choice, char, anyChar, parseOnly, endOfInput, manyTill)
+import           Data.Text                             (cons, pack, append)
+import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, endOfInput, manyTill)
 import           Data.OrgMode.Types.Paragraph          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile)
 

@@ -16,8 +16,8 @@ where
 
 import           Control.Applicative   ((<|>))
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Types (Parser)
-import           Data.Text             (Text)
+import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, endOfLine, notChar)
+import           Data.Text             (Text, cons)
 import qualified Data.Text             as Text
 import           Data.Functor          (($>))
 
@@ -27,17 +27,17 @@ import           Data.Functor          (($>))
 -- @Data.Char@ which also includes control characters such as a return
 -- and newline which we need to *not* consume in some cases during
 -- parsing.
-skipOnlySpace :: Parser Text ()
+skipOnlySpace :: Parser ()
 skipOnlySpace = Attoparsec.Text.skipWhile spacePred
   where
     spacePred s = s == ' ' || s == '\t'
 
 -- | Parse a non-heading line of a section.
-nonHeadline :: Parser Text Text
+nonHeadline :: Parser Text
 nonHeadline = nonHeadline0 <|> nonHeadline1
   where
-    nonHeadline0 = Attoparsec.Text.endOfLine $> Text.pack ""
-    nonHeadline1 = Text.pack <$> do
-      h <- Attoparsec.Text.notChar '*'
-      t <- Attoparsec.Text.manyTill Attoparsec.Text.anyChar Attoparsec.Text.endOfLine
-      pure (h:t)
+    nonHeadline0 = endOfLine $> Text.pack ""
+    nonHeadline1 = do 
+      result <- cons <$> notChar '*' <*> takeTill isEndOfLine 
+      _ <- endOfLine
+      return result

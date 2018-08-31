@@ -20,10 +20,10 @@ where
 
 import           Control.Applicative            hiding (empty)
 import           Data.Semigroup
-import           Data.Text                             (cons, append, empty, intercalate)
-import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, endOfInput, manyTill)
+import           Data.Text                             (cons, append, empty, intercalate, filter)
+import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill)
 import           Data.OrgMode.Types.Paragraph          (MarkupText (..), Paragraph (..))
-import           Prelude                        hiding (takeWhile)
+import           Prelude                        hiding (takeWhile, filter)
 import           Data.OrgMode.Parse.Attoparsec.Util    (takeNonEmptyLines)
 
 data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} 
@@ -43,12 +43,11 @@ createTokenParser innerParser Token{..}= do
      Left s -> fail s
      Right a -> return $ markup a
 
--- TODO: \n shall be removed
 parsePlainText :: Parser MarkupText
 parsePlainText = do
   c <- anyChar
   content <- takeWhile isNotToken
-  return $ Plain (cons c content)
+  return $ Plain (filter (not . isEndOfLine) (cons c content))
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText

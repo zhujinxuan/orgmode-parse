@@ -14,11 +14,9 @@ module Data.OrgMode.Parse.Attoparsec.Util
 )
 where
 
-import           Control.Applicative   ((<|>))
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
 import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, endOfLine, notChar)
-import           Data.Text             (Text, cons)
-import qualified Data.Text             as Text
+import           Data.Text             (Text, cons, empty)
 import           Data.Functor          (($>))
 
 -- | Skip whitespace characters, only!
@@ -34,9 +32,9 @@ skipOnlySpace = Attoparsec.Text.skipWhile spacePred
 
 -- | Parse a non-heading line of a section.
 nonHeadline :: Parser Text
-nonHeadline = nonHeadline0 <|> nonHeadline1
+nonHeadline = nonHeadline0 <> nonHeadline1
   where
-    nonHeadline0 = endOfLine $> Text.pack ""
+    nonHeadline0 = endOfLine $> empty
     nonHeadline1 = do 
       result <- cons <$> notChar '*' <*> takeTill isEndOfLine 
       _ <- endOfLine

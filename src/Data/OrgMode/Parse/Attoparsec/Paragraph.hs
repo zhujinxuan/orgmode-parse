@@ -18,9 +18,9 @@ module Data.OrgMode.Parse.Attoparsec.Paragraph
 )
 where
 
-import           Control.Applicative
+import           Control.Applicative            hiding (empty)
 import           Data.Semigroup
-import           Data.Text                             (cons, pack, append)
+import           Data.Text                             (cons, append, empty)
 import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, endOfInput, manyTill)
 import           Data.OrgMode.Types.Paragraph          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile)
@@ -56,7 +56,7 @@ parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> pars
 appendElement :: MarkupText -> [MarkupText] -> [MarkupText]
 appendElement a [] = [a]
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (append nonEmptyText parserFailedText) : xs
-appendElement h t = if h == Plain (pack "") 
+appendElement h t = if h == Plain empty
                        then t
                        else h:t
 

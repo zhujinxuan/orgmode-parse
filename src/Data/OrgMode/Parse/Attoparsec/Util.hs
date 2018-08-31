@@ -42,10 +42,7 @@ nonHeadline = nonHeadline0 <> nonHeadline1
 takeALine :: Parser Text
 takeALine = do
   content <- takeTill isEndOfLine 
-  c <- (endOfInput $> Nothing) <> (Just <$> anyChar)
-  case c of 
-    Nothing -> return content
-    Just cc -> return $snoc content cc
+  (endOfInput $> content) <> (snoc content <$> anyChar)
 
 
 takeNonEmptyLines :: Parser [Text]

@@ -22,7 +22,7 @@ import           Control.Applicative            hiding (empty)
 import           Data.Semigroup
 import           Data.Text                             (cons, append, empty, intercalate, filter)
 import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill)
-import           Data.OrgMode.Types.Paragraph          (MarkupText (..), Paragraph (..))
+import           Data.OrgMode.Types          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile, filter)
 import           Data.OrgMode.Parse.Attoparsec.Util    (takeNonEmptyLines)
 

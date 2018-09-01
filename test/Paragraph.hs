@@ -2,7 +2,7 @@
  module Paragraph where
 import          Test.Tasty
 import           Test.Tasty.HUnit
-import           Data.OrgMode.Types.Paragraph (MarkupText (..), Paragraph (..))
+import           Data.OrgMode.Types (MarkupText (..), Paragraph (..))
 import           Data.OrgMode.Parse.Attoparsec.Paragraph (parseParagraph)
 import           Data.Text (pack)
 import           Data.Either

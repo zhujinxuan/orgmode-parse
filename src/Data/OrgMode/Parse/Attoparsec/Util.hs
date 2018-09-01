@@ -18,7 +18,7 @@ where
 
 import           Data.Semigroup
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, endOfInput, (<?>))
+import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, endOfInput)
 import           Data.Text             (Text, cons, empty, snoc)
 import           Data.Functor          (($>))
 -- | Skip whitespace characters, only!
@@ -44,6 +44,5 @@ takeALine = do
   content <- takeTill isEndOfLine 
   (endOfInput $> content) <> (snoc content <$> anyChar)
 
-
 takeNonEmptyLines :: Parser [Text]
-takeNonEmptyLines = manyTill takeALine (endOfInput <> (skipSpace *> endOfLine)) <?> "Take Many Lines"
+takeNonEmptyLines = manyTill takeALine (endOfInput <> (skipSpace *> endOfLine))

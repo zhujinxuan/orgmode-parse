@@ -46,9 +46,9 @@ parseDrawer =
 -- > :END:
 parseDrawerName :: Attoparsec.Parser Text Text
 parseDrawerName =
-  skipSpace *> skip (== ':') *>
+  skipSpace *> char ':' *>
   takeWhile1 (/= ':')        <*
-  skip (== ':') <* skipSpace
+  char ':' <* skipSpace
 
 -- | Parse drawer delimiters, e.g the beginning and end of a property
 -- drawer:

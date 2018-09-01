@@ -18,10 +18,12 @@ where
 
 import           Data.Semigroup hiding (option)
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, endOfInput, option)
-import           Data.Text             (Text, cons, empty, snoc, find, head)
+import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, option)
+import           Data.Text             (Text, cons, empty, snoc, find)
+import qualified Data.Text             as Text
 import           Data.Char             (isSpace)
 import           Data.Functor          (($>))
+import           Data.Maybe            (isNothing, isJust)
 -- | Skip whitespace characters, only!
 --
 -- @Data.Attoparsec.Text.skipSpace@ uses the @isSpace@ predicate from
@@ -46,14 +48,29 @@ takeALine = do
   option content (snoc content <$> anyChar)
 
 takeParagraphLinesTill :: (Text -> Bool) -> Parser [Text]
-takeParagraphLinesTill p = (endOfInput $> []) <> do 
+takeParagraphLinesTill p = do 
   content <- takeALine
-  case find isSpace content of
+  case find (not . isSpace) content of
     Nothing -> return [content]
     Just _ -> 
       if p content 
          then fail "Not a Paragraph Line"
          else (content : ) <$> (takeParagraphLinesTill p <> return []) 
 
+-- Whether the content is ended by *text* or :text:, is used to handle isDrawer and isHeadLine
+isLastSurroundBy :: Char -> Text -> Bool
+isLastSurroundBy c content = case Text.split ( == c) content of
+      [_, x, y] -> (not . Text.null) x && (Text.null y || Text.all isSpace y)
+      _ -> False
+
+isHeadLine :: Text -> Bool
+isHeadLine content = (not . Text.null) content && Text.head content == '*' && not (isLastSurroundBy '*' content)
+
+isDrawer :: Text -> Bool
+isDrawer content = 
+  case find (not .isSpace) content of
+    Nothing -> False
+    Just c -> c == ':' && isLastSurroundBy ':' content
+
 takeNonEmptyLines :: Parser [Text]
-takeNonEmptyLines = takeParagraphLinesTill (const False)
+takeNonEmptyLines = takeParagraphLinesTill (\c -> isDrawer c || isHeadLine c)

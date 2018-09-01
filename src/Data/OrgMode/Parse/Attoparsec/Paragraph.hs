@@ -59,7 +59,9 @@ appendElement a [] = [a]
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (append nonEmptyText parserFailedText) : xs
 appendElement h t = if h == Plain empty
                        then t
-                       else h:t
+                       else case t of 
+                              (Plain empty:ts) -> h:ts
+                              _ -> h:t
 
 parseParagraph :: Parser Paragraph
 parseParagraph = do

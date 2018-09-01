@@ -24,7 +24,7 @@ import           Data.Text                             (cons, append, empty, int
 import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill)
 import           Data.OrgMode.Types          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile, filter)
-import           Data.OrgMode.Parse.Attoparsec.Util    (takeNonEmptyLines)
+import           Data.OrgMode.Parse.Attoparsec.Util    (takeParagraphLines)
 
 data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} 
 
@@ -65,7 +65,8 @@ appendElement h t = if h == Plain empty
 
 parseParagraph :: Parser Paragraph
 parseParagraph = do
-  text <- intercalate empty <$> takeNonEmptyLines
+  text <- intercalate empty <$> takeParagraphLines
   case parseOnly parseMarkupContent text of 
     Left s -> fail s
     Right s -> return $ Paragraph s
+

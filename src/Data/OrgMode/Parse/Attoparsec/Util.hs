@@ -12,18 +12,17 @@ module Data.OrgMode.Parse.Attoparsec.Util
 ( skipOnlySpace,
   nonHeadline,
   takeALine,
-  takeNonEmptyLines,
+  takeParagraphLines,
 )
 where
 
 import           Data.Semigroup hiding (option)
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, option)
+import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, option, isHorizontalSpace)
 import           Data.Text             (Text, cons, empty, snoc, find)
 import qualified Data.Text             as Text
 import           Data.Char             (isSpace)
 import           Data.Functor          (($>))
-import           Data.Maybe            (isNothing, isJust)
 -- | Skip whitespace characters, only!
 --
 -- @Data.Attoparsec.Text.skipSpace@ uses the @isSpace@ predicate from
@@ -31,9 +30,7 @@ import           Data.Maybe            (isNothing, isJust)
 -- and newline which we need to *not* consume in some cases during
 -- parsing.
 skipOnlySpace :: Parser ()
-skipOnlySpace = Attoparsec.Text.skipWhile spacePred
-  where
-    spacePred s = s == ' ' || s == '\t'
+skipOnlySpace = Attoparsec.Text.skipWhile isHorizontalSpace
 
 -- | Parse a non-heading line of a section.
 nonHeadline :: Parser Text
@@ -72,5 +69,5 @@ isDrawer content =
     Nothing -> False
     Just c -> c == ':' && isLastSurroundBy ':' content
 
-takeNonEmptyLines :: Parser [Text]
-takeNonEmptyLines = takeParagraphLinesTill (\c -> isDrawer c || isHeadLine c)
+takeParagraphLines :: Parser [Text]
+takeParagraphLines = takeParagraphLinesTill (\c -> isDrawer c || isHeadLine c)

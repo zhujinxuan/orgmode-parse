@@ -18,8 +18,9 @@ where
 
 import           Data.Semigroup hiding (option)
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, endOfInput, option)
-import           Data.Text             (Text, cons, empty, snoc)
+import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, endOfInput, option)
+import           Data.Text             (Text, cons, empty, snoc, find, head)
+import           Data.Char             (isSpace)
 import           Data.Functor          (($>))
 -- | Skip whitespace characters, only!
 --
@@ -44,5 +45,15 @@ takeALine = do
   content <- takeTill isEndOfLine
   option content (snoc content <$> anyChar)
 
+takeParagraphLinesTill :: (Text -> Bool) -> Parser [Text]
+takeParagraphLinesTill p = (endOfInput $> []) <> do 
+  content <- takeALine
+  case find isSpace content of
+    Nothing -> return [content]
+    Just _ -> 
+      if p content 
+         then fail "Not a Paragraph Line"
+         else (content : ) <$> (takeParagraphLinesTill p <> return []) 
+
 takeNonEmptyLines :: Parser [Text]
-takeNonEmptyLines = manyTill takeALine (endOfInput <> (skipSpace *> endOfLine))
+takeNonEmptyLines = takeParagraphLinesTill (const False)

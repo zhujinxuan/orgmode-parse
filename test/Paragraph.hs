@@ -10,23 +10,29 @@ import           Util
 
 parserMarkupTests :: TestTree
 parserMarkupTests = testGroup "Attoparsec orgmode Paragraph"
-  [ testCase "Parses Single Markup Paragraph" $
+  [ testCase "Parses a Single Markup" $
       testDocS "* text *" $ Paragraph [Bold [(Plain . pack) " text "]],
-    testCase "Parses the Plain Paragraph" $
+    testCase "Parses a Plain Text" $
       testDocS " text "   $ Paragraph [(Plain . pack) " text"],
-    testCase "Parses the broken markup Paragraph with token at start" $
+    testCase "Parses a broken markup with token at start" $
       testDocS "_ text "  $ Paragraph [(Plain . pack) "_ text"],
-    testCase "Parses the broken markup Paragraph with token at end" $
+    testCase "Parses a broken markup Paragraph with token at end" $
       testDocS " text *"  $ Paragraph [(Plain . pack) " text *"],
-    testCase "Parses the broken markup Paragraph with token in middle" $
+    testCase "Parses a broken markup Paragraph with token in middle" $
       testDocS " te*xt "  $ Paragraph [(Plain . pack) " te*xt"],
-    testCase "Parses Single Markup Paragraph" $
+    testCase "Parses Nested Markup" $
       testDocS "_* text *_" $ Paragraph [Italic [Bold [(Plain . pack) " text "]]],
     testCase "Parses Multi-lines Markup Paragraph" $
       testDocS "_* l1p1\nl2p2 *_" $ Paragraph [Italic [Bold [(Plain . pack) " l1p1 l2p2 "]]],
     testCase "Parses Multi-lines Markup Paragraph followed a Headline" $
       testDocS "_* l1p1\nl2p2 *_\n" $ Paragraph [Italic [Bold [(Plain . pack) " l1p1 l2p2 "]]],
-    testCase "Parses the Headline in Paragraph" $
+    testCase "Paragraph Parser shall ignore the space before endOfLine (in markup)" $
+      testDocS "_* l1p1 \nl2p2 *_\n" $ Paragraph [Italic [Bold [(Plain . pack) " l1p1 l2p2 "]]],
+    testCase "Paragraph Parser shall ignore the space before endOfLine (in plain)" $
+      testDocS " l1p1 \nl2p2 " $ Paragraph [(Plain . pack) " l1p1 l2p2"],
+    testCase "Paragraph Parser shall stop at the empty line" $
+      testDocS "l1p1 \n\nl2p2 " $ Paragraph [(Plain . pack) "l1p1"],
+    testCase "Paragraph Parser shall NOT parse the Headline" $
       testException "* text " "Not a paragraph line"
   ]
   where

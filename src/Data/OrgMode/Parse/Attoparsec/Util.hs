@@ -8,6 +8,8 @@ Stability   :  stable
 Attoparsec utilities.
 -}
 
+{-# LANGUAGE TupleSections #-}
+
 module Data.OrgMode.Parse.Attoparsec.Util
 ( skipOnlySpace,
   nonHeadline,
@@ -17,13 +19,14 @@ module Data.OrgMode.Parse.Attoparsec.Util
 )
 where
 
-import           Data.Semigroup hiding (option)
+import           Data.Semigroup 
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
 import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, option, isHorizontalSpace)
-import           Data.Text             (Text, cons, empty, snoc, find)
+import           Data.Text             (Text, cons, snoc, find)
 import qualified Data.Text             as Text
 import           Data.Char             (isSpace)
 import           Data.Functor          (($>))
+import           Data.Maybe            (isNothing)
 -- | Skip whitespace characters, only!
 --
 -- @Data.Attoparsec.Text.skipSpace@ uses the @isSpace@ predicate from
@@ -37,24 +40,21 @@ skipOnlySpace = Attoparsec.Text.skipWhile isHorizontalSpace
 nonHeadline :: Parser Text
 nonHeadline = nonHeadline0 <> nonHeadline1
   where
-    nonHeadline0 = endOfLine $> empty
+    nonHeadline0 = endOfLine $> Text.empty
     nonHeadline1 = cons <$> notChar '*' <*> (takeTill isEndOfLine <* endOfLine)
 
 takeALine :: Parser Text
 takeALine = do
   content <- takeTill isEndOfLine
-  option content (snoc content <$> anyChar)
+  Attoparsec.Text.option content (snoc content <$> anyChar)
 
 takeLinesTill :: (Text -> Bool) -> Parser Text
 takeLinesTill p = takePLines where
-  takePLines = do 
-    content <- takeALine
-    case find (not . isSpace) content of
-      Nothing -> return empty
-      Just _ -> 
-        if p content 
-           then fail ""
-           else Text.append content <$> (takeLinesTill p <> return empty) 
+  takePLines = takeALine >>= appendLine
+  appendLine content
+    | isEmptyLine content = return Text.empty
+    | p content           = fail ""
+    | otherwise = Text.append content <$> (takePLines <> return Text.empty) 
 
 -- Whether the content is ended by *text* or :text:, is used to handle isDrawer and isHeadLine
 isLastSurroundBy :: Char -> Text -> Bool
@@ -64,3 +64,16 @@ isLastSurroundBy c content = case Text.split ( == c) content of
 
 isHeadLine :: Text -> Bool
 isHeadLine content = (not . Text.null) content && Text.head content == '*' && not (isLastSurroundBy '*' content)
+
+isEmptyLine :: Text -> Bool
+isEmptyLine  = isNothing . find (not . isSpace)
+
+takeContentBeforeBlockTill :: (Text -> Bool) -> Parser s -> Parser (Text, Maybe s)
+takeContentBeforeBlockTill p parseBlock = scanBlock where
+  scanBlock = ((Text.empty, ) . Just  <$> parseBlock) <> (takeALine >>= appendALine)
+  -- Empty line is always an breaker
+  appendALine content 
+    | isEmptyLine content = return (Text.empty, Nothing)
+    | otherwise = do 
+      (restContent, block) <- scanBlock <> return (Text.empty, Nothing)
+      return (Text.append content restContent, block)

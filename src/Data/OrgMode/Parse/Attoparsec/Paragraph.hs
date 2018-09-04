@@ -71,4 +71,3 @@ parseParagraph = do
   case parseOnly parseMarkupContent text of 
     Left s -> fail s
     Right s -> return $ Paragraph s
-

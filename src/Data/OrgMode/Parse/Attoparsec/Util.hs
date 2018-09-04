@@ -12,7 +12,8 @@ module Data.OrgMode.Parse.Attoparsec.Util
 ( skipOnlySpace,
   nonHeadline,
   takeALine,
-  takeParagraphLines,
+  takeLinesTill,
+  isHeadLine
 )
 where
 
@@ -44,15 +45,16 @@ takeALine = do
   content <- takeTill isEndOfLine
   option content (snoc content <$> anyChar)
 
-takeParagraphLinesTill :: (Text -> Bool) -> Parser [Text]
-takeParagraphLinesTill p = do 
-  content <- takeALine
-  case find (not . isSpace) content of
-    Nothing -> return [content]
-    Just _ -> 
-      if p content 
-         then fail "Not a Paragraph Line"
-         else (content : ) <$> (takeParagraphLinesTill p <> return []) 
+takeLinesTill :: (Text -> Bool) -> Parser Text
+takeLinesTill p = takePLines where
+  takePLines = do 
+    content <- takeALine
+    case find (not . isSpace) content of
+      Nothing -> return empty
+      Just _ -> 
+        if p content 
+           then fail "Not a Paragraph Line"
+           else Text.append content <$> (takeLinesTill p <> return empty) 
 
 -- Whether the content is ended by *text* or :text:, is used to handle isDrawer and isHeadLine
 isLastSurroundBy :: Char -> Text -> Bool
@@ -62,12 +64,3 @@ isLastSurroundBy c content = case Text.split ( == c) content of
 
 isHeadLine :: Text -> Bool
 isHeadLine content = (not . Text.null) content && Text.head content == '*' && not (isLastSurroundBy '*' content)
-
-isDrawer :: Text -> Bool
-isDrawer content = 
-  case find (not .isSpace) content of
-    Nothing -> False
-    Just c -> c == ':' && isLastSurroundBy ':' content
-
-takeParagraphLines :: Parser [Text]
-takeParagraphLines = takeParagraphLinesTill (\c -> isDrawer c || isHeadLine c)

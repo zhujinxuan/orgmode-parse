@@ -20,11 +20,12 @@ where
 
 import           Control.Applicative            
 import           Data.Semigroup
-import           Data.Text                             (cons, append, filter)
+import           Data.Char                             (isSpace)
+import           Data.Text                             (Text, cons, append, snoc, intercalate)
 import qualified Data.Text                      as     Text
 import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill, (<?>))
 import           Data.OrgMode.Types          (MarkupText (..), Paragraph (..))
-import           Prelude                        hiding (takeWhile, filter)
+import           Prelude                        hiding (takeWhile)
 import           Data.OrgMode.Parse.Attoparsec.Util    (takeLinesTill, isHeadLine)
 
 data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} 
@@ -48,7 +49,14 @@ parsePlainText :: Parser MarkupText
 parsePlainText = do
   c <- anyChar
   content <- takeWhile isNotToken
-  return $ Plain (filter (not . isEndOfLine) (cons c content))
+  return $ Plain $ refactorLineEnd (cons c content) 
+
+refactorLineEnd :: Text -> Text
+refactorLineEnd str = fix content where
+  content = intercalate (Text.pack " ") (map (Text.dropWhileEnd isSpace) (Text.split isEndOfLine str)) 
+  fix s = if isSpace (Text.last str)
+           then snoc s ' '
+           else s
 
 emptyMarkup :: MarkupText
 emptyMarkup = Plain Text.empty
@@ -62,7 +70,7 @@ appendElement h t
 
 parseParagraph :: Parser Paragraph
 parseParagraph = do
-  text <- takeLinesTill isHeadLine <?> "Not a paragraph line"
+  text <- Text.dropWhileEnd isSpace <$> (takeLinesTill isHeadLine <?> "Not a paragraph line")
   case parseOnly parseMarkupContent text of 
     Left s -> fail s
     Right s -> return $ Paragraph s

@@ -18,10 +18,11 @@ module Data.OrgMode.Parse.Attoparsec.Paragraph
 )
 where
 
-import           Control.Applicative            hiding (empty)
+import           Control.Applicative            
 import           Data.Semigroup
-import           Data.Text                             (cons, append, empty, intercalate, filter)
-import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill)
+import           Data.Text                             (cons, append, filter)
+import qualified Data.Text                      as     Text
+import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill, (<?>))
 import           Data.OrgMode.Types          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile, filter)
 import           Data.OrgMode.Parse.Attoparsec.Util    (takeLinesTill, isHeadLine)
@@ -54,18 +55,19 @@ parseMarkup :: Parser MarkupText
 parseMarkupContent =  foldr appendElement [] <$> manyTill parseMarkup endOfInput  
 parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> parsePlainText
 
+emptyMarkup :: MarkupText
+emptyMarkup = Plain Text.empty
 appendElement :: MarkupText -> [MarkupText] -> [MarkupText]
 appendElement a [] = [a]
 appendElement (Plain nonEmptyText) (Plain parserFailedText: xs) = Plain (append nonEmptyText parserFailedText) : xs
-appendElement h t = if h == Plain empty
-                       then t
-                       else case t of 
-                              (Plain empty:ts) -> h:ts
-                              _ -> h:t
+appendElement h t
+  | h == emptyMarkup = t
+  | head t == emptyMarkup = h: tail t
+  | otherwise = h:t
 
 parseParagraph :: Parser Paragraph
 parseParagraph = do
-  text <- takeLinesTill isHeadLine
+  text <- takeLinesTill isHeadLine <?> "Not a paragraph line"
   case parseOnly parseMarkupContent text of 
     Left s -> fail s
     Right s -> return $ Paragraph s

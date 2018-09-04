@@ -53,7 +53,7 @@ takeLinesTill p = takePLines where
       Nothing -> return empty
       Just _ -> 
         if p content 
-           then fail "Not a Paragraph Line"
+           then fail ""
            else Text.append content <$> (takeLinesTill p <> return empty) 
 
 -- Whether the content is ended by *text* or :text:, is used to handle isDrawer and isHeadLine

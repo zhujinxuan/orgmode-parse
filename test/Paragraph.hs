@@ -27,7 +27,7 @@ parserMarkupTests = testGroup "Attoparsec orgmode Paragraph"
     testCase "Parses Multi-lines Markup Paragraph followed a Headline" $
       testDocS "_* l1p1\nl2p2 *_\n" $ Paragraph [Italic [Bold [(Plain . pack) " l1p1l2p2 "]]],
     testCase "Parses the Headline in Paragraph" $
-      testException "* text " "Not a Paragraph"
+      testException "* text " "Not a paragraph line"
   ]
   where
     testDocS s expected = expectParse parseParagraph (pack s) (Right expected)

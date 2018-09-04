@@ -15,13 +15,14 @@ module Data.OrgMode.Parse.Attoparsec.Util
   nonHeadline,
   takeALine,
   takeLinesTill,
-  isHeadLine
+  isHeadLine,
+  takeContentBeforeBlockTill
 )
 where
 
 import           Data.Semigroup 
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, manyTill, skipSpace, option, isHorizontalSpace)
+import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, skipSpace, option, isHorizontalSpace)
 import           Data.Text             (Text, cons, snoc, find)
 import qualified Data.Text             as Text
 import           Data.Char             (isSpace)
@@ -49,12 +50,12 @@ takeALine = do
   Attoparsec.Text.option content (snoc content <$> anyChar)
 
 takeLinesTill :: (Text -> Bool) -> Parser Text
-takeLinesTill p = takePLines where
-  takePLines = takeALine >>= appendLine
-  appendLine content
-    | isEmptyLine content = return Text.empty
+takeLinesTill p = fst <$> Attoparsec.Text.match takePLines where
+  takePLines = takeALine >>= continueALine
+  continueALine content
+    | isEmptyLine content = return ()
     | p content           = fail ""
-    | otherwise = Text.append content <$> (takePLines <> return Text.empty) 
+    | otherwise = takePLines <> return ()
 
 -- Whether the content is ended by *text* or :text:, is used to handle isDrawer and isHeadLine
 isLastSurroundBy :: Char -> Text -> Bool
@@ -73,7 +74,8 @@ takeContentBeforeBlockTill p parseBlock = scanBlock where
   scanBlock = ((Text.empty, ) . Just  <$> parseBlock) <> (takeALine >>= appendALine)
   -- Empty line is always an breaker
   appendALine content 
-    | isEmptyLine content = return (Text.empty, Nothing)
+    | isEmptyLine content = return (content, Nothing)
+    | p content = fail ""
     | otherwise = do 
       (restContent, block) <- scanBlock <> return (Text.empty, Nothing)
       return (Text.append content restContent, block)

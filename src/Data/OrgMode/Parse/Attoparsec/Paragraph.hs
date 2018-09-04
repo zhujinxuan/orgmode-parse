@@ -10,6 +10,7 @@
 ----------------------------------------------------------------------------
 
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TupleSections #-}
 
 module Data.OrgMode.Parse.Attoparsec.Paragraph
 ( 
@@ -26,7 +27,7 @@ import qualified Data.Text                      as     Text
 import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill, (<?>))
 import           Data.OrgMode.Types          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile)
-import           Data.OrgMode.Parse.Attoparsec.Util    (takeLinesTill, isHeadLine)
+import           Data.OrgMode.Parse.Attoparsec.Util    (takeLinesTill, isHeadLine, takeContentBeforeBlockTill)
 
 data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} 
 
@@ -68,12 +69,26 @@ appendElement h t
   | head t == emptyMarkup = h: tail t
   | otherwise = h:t
 
-parseParagraph :: Parser Paragraph
-parseParagraph = do
-  text <- Text.dropWhileEnd isSpace <$> (takeLinesTill isHeadLine <?> "Not a paragraph line")
+
+takeTextAsParagraph :: Text -> Parser Paragraph
+takeTextAsParagraph text = 
   case parseOnly parseMarkupContent text of 
     Left s -> fail s
     Right s -> return $ Paragraph s
+
+parseParagraph :: Parser Paragraph
+parseParagraph = (Text.dropWhileEnd isSpace <$> (takeLinesTill isHeadLine <?> "Not a paragraph line")) >>= takeTextAsParagraph
+
+takeParagraphAndBlock :: Parser s -> Parser (Maybe Paragraph, Maybe s)
+takeParagraphAndBlock parseBlock = do
+  (content, block) <- takeContentBeforeBlockTill isHeadLine parseBlock
+  let paragraphText = Text.dropWhileEnd isSpace content in 
+      if Text.null paragraphText 
+         then return (Nothing, block)
+         else (, block) . Just <$> takeTextAsParagraph content 
+
+  
+
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText
 parseMarkupContent =  foldr appendElement [] <$> manyTill parseMarkup endOfInput  

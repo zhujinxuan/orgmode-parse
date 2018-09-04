@@ -50,11 +50,6 @@ parsePlainText = do
   content <- takeWhile isNotToken
   return $ Plain (filter (not . isEndOfLine) (cons c content))
 
-parseMarkupContent :: Parser [MarkupText]
-parseMarkup :: Parser MarkupText
-parseMarkupContent =  foldr appendElement [] <$> manyTill parseMarkup endOfInput  
-parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> parsePlainText
-
 emptyMarkup :: MarkupText
 emptyMarkup = Plain Text.empty
 appendElement :: MarkupText -> [MarkupText] -> [MarkupText]
@@ -71,3 +66,7 @@ parseParagraph = do
   case parseOnly parseMarkupContent text of 
     Left s -> fail s
     Right s -> return $ Paragraph s
+parseMarkupContent :: Parser [MarkupText]
+parseMarkup :: Parser MarkupText
+parseMarkupContent =  foldr appendElement [] <$> manyTill parseMarkup endOfInput  
+parseMarkup = choice (map (createTokenParser parseMarkupContent) tokens) <> parsePlainText

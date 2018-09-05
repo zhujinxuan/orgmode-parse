@@ -8,7 +8,7 @@ import           Drawer
 import           Headline
 import           Test.Tasty
 import           Timestamps
-import           Paragraph
+import           Paragraph.Markup
 
 main :: IO ()
 main = defaultMain tests

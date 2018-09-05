@@ -20,14 +20,15 @@ module Data.OrgMode.Parse.Attoparsec.Paragraph
 where
 
 import           Control.Applicative            
+import           Control.Monad                         (when)
 import           Data.Semigroup
 import           Data.Char                             (isSpace)
 import           Data.Text                             (Text, cons, append, snoc, intercalate)
 import qualified Data.Text                      as     Text
-import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill, (<?>))
+import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill, (<?>), many', atEnd)
 import           Data.OrgMode.Types          (MarkupText (..), Paragraph (..))
 import           Prelude                        hiding (takeWhile)
-import           Data.OrgMode.Parse.Attoparsec.Util    (takeLinesTill, isHeadLine, takeContentBeforeBlockTill)
+import           Data.OrgMode.Parse.Attoparsec.Util    (takeLinesTill, isHeadLine, takeContentBeforeBlockTill, takeEmptyLine)
 
 data Token = Token { keyChar :: Char, markup :: [MarkupText] -> MarkupText} 
 
@@ -69,7 +70,6 @@ appendElement h t
   | head t == emptyMarkup = h: tail t
   | otherwise = h:t
 
-
 takeTextAsParagraph :: Text -> Parser Paragraph
 takeTextAsParagraph text = 
   case parseOnly parseMarkupContent text of 
@@ -77,7 +77,11 @@ takeTextAsParagraph text =
     Right s -> return $ Paragraph s
 
 parseParagraph :: Parser Paragraph
-parseParagraph = (Text.dropWhileEnd isSpace <$> (takeLinesTill isHeadLine <?> "Not a paragraph line")) >>= takeTextAsParagraph
+parseParagraph = many' takeEmptyLine *> parseContent where
+  parseContent = (dropLastSpaces <$> (isNotAtEndOfInput *> takeContentTillHeadline)) >>= takeTextAsParagraph
+  dropLastSpaces = Text.dropWhileEnd isSpace 
+  takeContentTillHeadline = takeLinesTill isHeadLine <?> "Not a paragraph line"
+  isNotAtEndOfInput = atEnd >>= (`when` fail "")
 
 takeParagraphAndBlock :: Parser s -> Parser (Maybe Paragraph, Maybe s)
 takeParagraphAndBlock parseBlock = do
@@ -86,8 +90,6 @@ takeParagraphAndBlock parseBlock = do
       if Text.null paragraphText 
          then return (Nothing, block)
          else (, block) . Just <$> takeTextAsParagraph content 
-
-  
 
 parseMarkupContent :: Parser [MarkupText]
 parseMarkup :: Parser MarkupText

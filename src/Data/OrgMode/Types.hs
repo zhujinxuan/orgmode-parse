@@ -100,7 +100,7 @@ data Section = Section
   , sectionProperties :: Properties      -- ^ A map of properties from the :PROPERTY: drawer
   , sectionLogbook    :: Logbook         -- ^ A list of clocks from the :LOGBOOK: drawer
   , sectionDrawers    :: [Drawer]        -- ^ A list of parsed user-defined drawers
-  , sectionParagraph  :: Text            -- ^ Content of Section
+  , sectionParagraph  :: [Paragraph]            -- ^ Content of Section
   } deriving (Show, Eq, Generic)
 
 newtype Properties = Properties { unProperties :: HashMap Text Text }

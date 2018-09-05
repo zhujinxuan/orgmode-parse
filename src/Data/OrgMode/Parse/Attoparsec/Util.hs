@@ -16,7 +16,8 @@ module Data.OrgMode.Parse.Attoparsec.Util
   takeALine,
   takeLinesTill,
   isHeadLine,
-  takeContentBeforeBlockTill
+  takeContentBeforeBlockTill,
+  takeEmptyLine
 )
 where
 
@@ -68,6 +69,8 @@ isHeadLine content = (not . Text.null) content && Text.head content == '*' && no
 
 isEmptyLine :: Text -> Bool
 isEmptyLine  = isNothing . find (not . isSpace)
+takeEmptyLine :: Parser Text
+takeEmptyLine = Attoparsec.Text.takeWhile isHorizontalSpace <* endOfLine
 
 takeContentBeforeBlockTill :: (Text -> Bool) -> Parser s -> Parser (Text, Maybe s)
 takeContentBeforeBlockTill p parseBlock = scanBlock where

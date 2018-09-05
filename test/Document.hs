@@ -170,7 +170,7 @@ goldenSubtreeListItemDoc = Right (Document
           sectionProperties = Properties {unProperties = fromList [("ONE","two")]},
           sectionLogbook = Logbook {unLogbook = []},
           sectionDrawers = [],
-          sectionParagraph =  [Paragraph [Plain " ",Bold [Plain " Item1  "],Plain " Item2"]]
+          sectionParagraph = plainParagraphs "    * Item1     * Item2"
         },
         subHeadlines = []
       }]

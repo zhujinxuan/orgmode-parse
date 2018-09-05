@@ -17,7 +17,9 @@ module Data.OrgMode.Parse.Attoparsec.Util
   takeLinesTill,
   isHeadLine,
   takeContentBeforeBlockTill,
-  takeEmptyLine
+  takeEmptyLine,
+  dropLastSpaces,
+  feedTextToParser
 )
 where
 
@@ -82,3 +84,13 @@ takeContentBeforeBlockTill p parseBlock = scanBlock where
     | otherwise = do 
       (restContent, block) <- scanBlock <> return (Text.empty, Nothing)
       return (Text.append content restContent, block)
+
+dropLastSpaces :: Text -> Text
+dropLastSpaces = Text.dropWhileEnd isSpace 
+
+feedTextToParser :: Text -> Parser s -> Parser s
+feedTextToParser t p = 
+  case parseOnly p t of 
+    Left s -> fail s
+    Right s -> return s
+

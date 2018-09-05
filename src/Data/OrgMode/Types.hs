@@ -43,6 +43,7 @@ module Data.OrgMode.Types
 , YearMonthDay      (..)
 , Paragraph         (..)
 , MarkupText        (..)
+, Item              (..)
 ) where
 
 import           Control.Monad        (mzero)
@@ -85,7 +86,8 @@ instance Aeson.ToJSON Depth
 instance Aeson.FromJSON Depth
 
 data MarkupText = Plain Text | Bold [MarkupText] | Italic [MarkupText] deriving (Show, Eq, Generic)
-newtype Paragraph = Paragraph [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)
+newtype Paragraph = Paragraph (Either [Item] [MarkupText]) deriving (Show, Eq, Generic, Semigroup, Monoid)
+newtype Item = Item [MarkupText] deriving (Show, Eq, Generic, Semigroup, Monoid)
 
 instance Aeson.ToJSON MarkupText
 instance Aeson.FromJSON MarkupText

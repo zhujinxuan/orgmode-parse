@@ -52,9 +52,10 @@ parserSmallDocumentTests = testGroup "Attoparsec Small Document"
     testSubtreeListItemDocFile  = do
       doc <- TextIO.readFile "test/subtree-list-items.org"
 
-      let subtreeListItemsDoc = parseOnly (parseDocument []) doc
+      -- let subtreeListItemsDoc = parseOnly (parseDocument []) doc
 
-      assertBool "Expected to parse document" (subtreeListItemsDoc == goldenSubtreeListItemDoc)
+      -- assertBool "Expected to parse document" (subtreeListItemsDoc == goldenSubtreeListItemDoc)
+      expectParse (parseDocument []) doc  goldenSubtreeListItemDoc
 
     kw           = ["TODO", "CANCELED", "DONE"]
     pText        = "Paragraph text\n.No headline here.\n##--------\n"
@@ -169,7 +170,7 @@ goldenSubtreeListItemDoc = Right (Document
           sectionProperties = Properties {unProperties = fromList [("ONE","two")]},
           sectionLogbook = Logbook {unLogbook = []},
           sectionDrawers = [],
-          sectionParagraph = plainParagraphs "    * Item1     * Item2"
+          sectionParagraph =  [Paragraph [Plain " ",Bold [Plain " Item1  "],Plain " Item2"]]
         },
         subHeadlines = []
       }]

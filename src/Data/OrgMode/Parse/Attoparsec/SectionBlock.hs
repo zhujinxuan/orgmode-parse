@@ -39,7 +39,7 @@ parseBlockAndDrawer parseDrawer = do
      else (, drawer) . Just <$> takeInnerTextAsParagraphs content 
 
 innerTextToBlocks :: Text -> Parser [SectionBlock]
-innserTextToBlocks = feedTextToParser parseBlocks where
+innerTextToBlocks = feedTextToParser parseBlocks where
   parseBlocks = concat <$> many' parseBlock
   parseBlock =  appendParagraphAndList <$> takeContentBeforeBlockTill isHeadLine parseList
   appendParagraphAndList :: (Text, Maybe List) -> Parser [SectionBlock]

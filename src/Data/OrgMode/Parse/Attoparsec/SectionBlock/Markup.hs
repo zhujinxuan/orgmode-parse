@@ -11,7 +11,7 @@
 
 {-# LANGUAGE RecordWildCards   #-}
 
-module Data.OrgMode.Parse.Attoparsec.Markup
+module Data.OrgMode.Parse.Attoparsec.SectionBlock.Markup
 ( 
   parseMarkupContent,
   parsePlainText,

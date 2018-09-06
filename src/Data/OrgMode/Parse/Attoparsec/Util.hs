@@ -19,13 +19,13 @@ module Data.OrgMode.Parse.Attoparsec.Util
   takeContentBeforeBlockTill,
   takeEmptyLine,
   dropLastSpaces,
-  feedTextToParser
+  feedParserText
 )
 where
 
 import           Data.Semigroup 
 import qualified Data.Attoparsec.Text  as Attoparsec.Text
-import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, skipSpace, option, isHorizontalSpace)
+import           Data.Attoparsec.Text  (Parser, takeTill, isEndOfLine, anyChar, endOfLine, notChar, skipSpace, option, isHorizontalSpace, atEnd)
 import           Data.Text             (Text, cons, snoc, find)
 import qualified Data.Text             as Text
 import           Data.Char             (isSpace)
@@ -52,8 +52,11 @@ takeALine = do
   content <- takeTill isEndOfLine
   Attoparsec.Text.option content (snoc content <$> anyChar)
 
+hasMoreInput = atEnd >>= (`when` fail "reach the end of input") 
+
 takeLinesTill :: (Text -> Bool) -> Parser Text
-takeLinesTill p = fst <$> Attoparsec.Text.match takePLines where
+takeLinesTill p = hasMoreInput *> takeText where
+  takeText = fst <$> Attoparsec.Text.match takePLines where
   takePLines = takeALine >>= continueALine
   continueALine content
     | isEmptyLine content = return ()
@@ -88,8 +91,8 @@ takeContentBeforeBlockTill p parseBlock = scanBlock where
 dropLastSpaces :: Text -> Text
 dropLastSpaces = Text.dropWhileEnd isSpace 
 
-feedTextToParser :: Text -> Parser s -> Parser s
-feedTextToParser t p = 
+feedParserText :: Text -> Parser s -> Parser s
+feedParserText t p = 
   case parseOnly p t of 
     Left s -> fail s
     Right s -> return s

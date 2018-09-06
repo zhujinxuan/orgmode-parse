@@ -22,6 +22,8 @@ parserMarkupTests = testGroup "Attoparsec orgmode Paragraph"
       testDocS " te*xt "   [Plain   " te*xt"],
     testCase "Parses Nested Markup" $
       testDocS "_* text *_"  [Italic [Bold [Plain  " text "]]],
+    testCase "Paragraph Parser shall not try to parse markup across lines" $
+      testDocS " _* l1p1 \nl2p2 *_"  [Plain  "_* l1p1 l2p2 *_"],
     testCase "Paragraph Parser shall ignore the space before endOfLine (in plain)" $
       testDocS " l1p1 \nl2p2 "  [Plain  " l1p1 l2p2"],
     testCase "Paragraph Parser shall stop at the empty line" $

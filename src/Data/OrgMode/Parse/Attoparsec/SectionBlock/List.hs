@@ -13,9 +13,9 @@
 {-# LANGUAGE OverloadedStrings          #-}
 
 
-module Data.OrgMode.Parse.Attoparsec.Paragraph
+module Data.OrgMode.Parse.Attoparsec.SectionBlock.List
 ( 
-  parseItems
+  parseList
 )
 where
 
@@ -26,7 +26,7 @@ import           Data.Char                             (isSpace)
 import           Data.Text                             (Text)
 import qualified Data.Text                      as     Text
 import           Data.Attoparsec.Text                  (Parser, takeWhile, choice, char, anyChar, parseOnly, isEndOfLine, endOfInput, manyTill, (<?>), many1', atEnd)
-import           Data.OrgMode.Types                    (Item)
+import           Data.OrgMode.Types                    (Item (..), List (..))
 import           Data.OrgMode.Parse.Attoparsec.Util    (takeALine, takeLinesTill, takeEmptyLine)
 import           Data.Maybe                            (isNothing)
 import           GHC.Generics
@@ -56,5 +56,6 @@ parseItem = do
   lines <- takeLineTill hasMorePrefixSpaceThan (prefixLength itemStart) <> return ""
   Item <$> feedTextToParser (Text.append (firstLine itemStart) lines) parseMarkupContent
 
-parseItems = Parser [Item]
-parseItems = many1' parseItem
+-- TODO: Support nested List
+parseList = Parser List
+parseList = List <$> many1' parseItem

@@ -56,7 +56,7 @@ hasMoreInput = atEnd >>= (`when` fail "reach the end of input")
 
 takeLinesTill :: (Text -> Bool) -> Parser Text
 takeLinesTill p = hasMoreInput *> takeText where
-  takeText = fst <$> Attoparsec.Text.match takePLines where
+  takeText = fst <$> Attoparsec.Text.match takePLines 
   takePLines = takeALine >>= continueALine
   continueALine content
     | isEmptyLine content = return ()
@@ -65,9 +65,12 @@ takeLinesTill p = hasMoreInput *> takeText where
 
 -- Whether the content is ended by *text* or :text:, is used to handle isDrawer and isHeadLine
 isLastSurroundBy :: Char -> Text -> Bool
-isLastSurroundBy c content = case Text.split ( == c) content of
-      [_, x, y] -> (not . Text.null) x && (Text.null y || Text.all isSpace y)
-      _ -> False
+isLastSurroundBy c content = result where
+  trimContent = dropWhileEnd isSpace content
+  result 
+    | Text.null trimContent = False
+    | Text.last trimContent /= c = False
+    | otherwise = compareLength (Text.filter (== c) trimContent) 2 == EQ 
 
 isHeadLine :: Text -> Bool
 isHeadLine content = (not . Text.null) content && Text.head content == '*' && not (isLastSurroundBy '*' content)
@@ -78,7 +81,7 @@ takeEmptyLine :: Parser Text
 takeEmptyLine = Attoparsec.Text.takeWhile isHorizontalSpace <* endOfLine
 
 takeContentBeforeBlockTill :: (Text -> Bool) -> Parser s -> Parser (Text, Maybe s)
-takeContentBeforeBlockTill p parseBlock = scanBlock where
+takeContentBeforeBlockTill p parseBlock = many' takeEmptyLine *> scanBlock where
   scanBlock = ((Text.empty, ) . Just  <$> parseBlock) <> (takeALine >>= appendALine)
   -- Empty line is always an breaker
   appendALine content 

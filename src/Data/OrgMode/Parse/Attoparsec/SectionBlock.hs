@@ -13,7 +13,7 @@
 
 module Data.OrgMode.Parse.Attoparsec.SectionBlock
 ( 
-  parseBlockTuple
+  parseBlockAndDrawer
 )
 where
 
@@ -41,13 +41,13 @@ parseBlockAndDrawer parseDrawer = do
 innerTextToBlocks :: Text -> Parser [SectionBlock]
 innerTextToBlocks = feedTextToParser parseBlocks where
   parseBlocks = concat <$> many' parseBlock
-  parseBlock =  appendParagraphAndList <$> takeContentBeforeBlockTill isHeadLine parseList
+  parseBlock =   takeContentBeforeBlockTill isHeadLine parseList >>= appendParagraphAndList
   appendParagraphAndList :: (Text, Maybe List) -> Parser [SectionBlock]
   appendParagraphAndList (text, list) = (++) <$> fetchParagraph text <*> fetchList list
   fetchParagraph :: Text  -> Parser [SectionBlock]
   fetchParagraph content
     | isEmptyLine content = return []
-    | otherwise = [] . Left . Paragraph <$> feedParserText parseMarkupContent content
+    | otherwise = [] . SectionBlock . Left . Paragraph <$> feedParserText parseMarkupContent content
   fetchList ::  Maybe List -> Parser [SectionBlock]
   fetchList  (_, Nothing) = return []
-  fetchList  (_, Just x) = return [Left x]
+  fetchList  (_, Just x) = return [SectionBlock . Left x]

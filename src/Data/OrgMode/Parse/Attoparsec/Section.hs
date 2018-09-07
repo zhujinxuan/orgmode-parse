@@ -23,7 +23,7 @@ import qualified Data.Text                            as Text
 import           Data.OrgMode.Parse.Attoparsec.Drawer
 import           Data.OrgMode.Parse.Attoparsec.Time
 import qualified Data.OrgMode.Parse.Attoparsec.Util   as Util
-import           Data.OrgMode.Parse.Attoparsec.Paragraph  (parseParagraph)
+import           Data.OrgMode.Parse.Attoparsec.SectionBlock  (parseBlockAndDrawer)
 import           Data.OrgMode.Types
 
 -- | Parse a heading section
@@ -39,5 +39,9 @@ parseSection =
    <*> many' parseClock
    <*> option mempty parseProperties
    <*> option mempty parseLogbook
-   <*> many' parseDrawer
-   <*> many' parseParagraph
+   <*> many' parseBlocks where 
+     parseBlocks = many' parseBlock
+     parseBlock = mergeContent <$> parseBlockAndDrawer parseDrawer
+     mergeConetnt :: ([SectionBlock], Maybe Drawer) -> [Either Drawer SectionBlock]
+     mergeContent (block, Nothing) = map Right block
+     mergeContent (block, Just d) = map Right block ++ [Right d]
